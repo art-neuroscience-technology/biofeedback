@@ -14,7 +14,16 @@ let poses = [];
 let bg;
 var shift_x = 370;
 var shift_y = 200; 
+var ws = new WebSocket("ws://localhost:9001/");
+var sendOSC = True
 
+ws.onopen = function() {
+    $("connection").innerHTML = "connected";
+  };
+  
+ws.onclose = function() {
+  $("connection").innerHTML = "not connected";
+};
 
 function setup() {
   createCanvas(displayWidth, displayHeight);
@@ -44,6 +53,7 @@ function draw() {
   // We can call both functions to draw all keypoints and the skeletons
   drawKeypoints();
   drawSkeleton();
+  sendOSC();
 }
 
 // A function to draw ellipses over the detected keypoints
@@ -60,6 +70,11 @@ function drawKeypoints()  {
         noStroke();
         fill(85, 6, 192);
         ellipse(keypoint.position.x + shift_x, keypoint.position.y + shift_y, 15, 15);
+        if (sendOSC){
+          #TODO change per part 
+          console.log(pose)
+          #ws.send(["cutoff", pose]);
+        }
       }
     }
   }
@@ -80,3 +95,19 @@ function drawSkeleton() {
     }
   }
 }
+
+function sendOSC() {
+
+  for (let i = 0; i < poses.length; i++) {
+    let skeleton = poses[i].skeleton;
+    // For every skeleton, loop through all body connections
+    for (let j = 0; j < skeleton.length; j++) {
+      let partA = skeleton[j][0];
+      let partB = skeleton[j][1];
+       ws.send(["cutoff", partA.position.x]);
+    }
+  }
+
+}
+
+  
