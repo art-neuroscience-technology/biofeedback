@@ -14,9 +14,29 @@ let poses = [];
 let bg;
 var shift_x = 370;
 var shift_y = 200; 
-var ws = new WebSocket("ws://localhost:9001/");
+
+const part_names = ['nose', 
+'leftEye','rightEye', 
+'leftEar', 'rightEar', 
+'leftShoulder', 'rightShoulder', 
+'leftElbow', 'rightElbow', 
+'leftWrist', 'rightWrist', 
+'leftHip', 'rightHip', 
+'leftKnee', 'rightKnee', 
+'leftAnkle', 'rightAnkle']
+
+var oscPort = new osc.WebSocketPort({
+    url: "ws://localhost:8081", // URL to your Web Socket server.
+    metadata: true
+});
+oscPort.open()
+
 var sendOSC = true
 
+
+function modelReady() {
+  console.log('Model ready');
+}
 
 function setup() {
   createCanvas(displayWidth, displayHeight);
@@ -26,8 +46,6 @@ function setup() {
 
   // Create a new poseNet method with a single detection
   poseNet = ml5.poseNet(video, modelReady);
-  // This sets up an event that fills the global variable "poses"
-  // with an array every time new poses are detected
   poseNet.on('pose', function(results) {
     poses = results;
   });
@@ -35,9 +53,6 @@ function setup() {
   video.hide();
 }
 
-function modelReady() {
-  select('#status').html('ANT');
-}
 
 function draw() {
   background(bg);
@@ -59,25 +74,20 @@ function drawKeypoints()  {
       // A keypoint is an object describing a body part (like rightArm or leftShoulder)
       let keypoint = pose.keypoints[j];
       // Only draw an ellipse is the pose probability is bigger than 0.2
-      if (keypoint.score > 0.2) {
+      if (keypoint.score > 0.8) {
         noStroke();
         fill(85, 6, 192);
         ellipse(keypoint.position.x + shift_x, keypoint.position.y + shift_y, 15, 15);
         if (sendOSC){
-          ws.onopen = function() {
-              $("connection").innerHTML = "connected";
-            };
-            
-          ws.onclose = function() {
-            $("connection").innerHTML = "not connected";
-          };
-          console.log(pose)
-          ws.send(["cutoff", pose]);
+          for (let k = 0; k < part_names.length; k++) {
+            sendkeypoint(keypoint, k)
+          }
         }
       }
     }
   }
 }
+
 
 // A function to draw the skeletons
 function drawSkeleton() {
@@ -95,6 +105,24 @@ function drawSkeleton() {
   }
 }
 
-
-
-  
+function sendkeypoint(keypoint, partIndex) {
+   console.log('send')
+   oscPort.send({
+                address: "/" + keypoint[partIndex] + '/x',
+                args: [
+                    {
+                        type: "f",
+                        value: keypoint.position.x
+                    }
+                  ]
+              });
+   oscPort.send({
+                address: "/" + keypoint[partIndex] + '/y',
+                args: [
+                    {
+                        type: "f",
+                        value: keypoint.position.y
+                    }
+                  ]
+              });
+}

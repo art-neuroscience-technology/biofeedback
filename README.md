@@ -5,7 +5,7 @@
 2. Start posenet at the browser 
 
 ```bash
-	python3 -m http.server 8000
+	
 ```
 
 Open at the web browser [http://localhost:8000/index.html](http://localhost:8000/index.html)

@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "@tensorflow-models/body-pix": "^2.2.0"
+    "@tensorflow-models/body-pix": "^2.2.0",
+    "node-osc": "^8.0.5",
+    "osc": "^2.4.3",
+    "osc-js": "^2.3.2"
   }
 }
